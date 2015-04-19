@@ -1,0 +1,39 @@
+dhcp-probe (1.3.0-3) unstable; urgency=low
+  This version is "build-depend" on dpkg-dev (>=1.15.4) because the architecture
+	detection system. In addition, this version of dhcp-probe fit the 3.8.3 policy
+	version.
+
+dhcp-probe (1.3.0-1) unstable; urgency=low
+
+  New upstream version (1.3.0) packaging, closing bug #522000.
+  This version includes new scripts (alert_program_name2 and
+  dhcp_probe_notify2) which help to differentiate malicious
+  rogue servers due to Trojan.Flush.M virus.
+
+  Fixed services dependencies in init script.
+  Thanks Nelson A. de Oliveira for his patch closing bug #521997.
+
+  Fixed mktemp template in postinst, closing bug #521765.
+
+  Bumped standards version to 3.8.1 to fit the new Debian policy.
+
+  Dropped build dependency on build-essential libc6-dev that fixes FTBFS on
+  several architectures, closing the bug #524771.
+
+  Fixed bug for upstream required /etc/dhcp_probe.cf file. This bug was
+  discovered by package maintainer and doesn't fix any bug from the Debian
+  Bug Tracking System.
+
+  Fixed bug in postrm which has to be idempotent and failed when previous package
+  install failed. This bug was discovered by package maintainer and doesn't fix
+  any bug from the Debian Bug Tracking System.
+
+	Add ${misc:Depends} in control file to fix debhelper V4 recommandation.
+
+ -- Laurent Guignard <lguignard.debian@gmail.com>  Tue, 14 Apr 2009 14:44:14 +0200
+
+dhcp-probe (1.2.2-1) unstable; urgency=low
+
+  Initial released that close bug #495959.
+
+ -- Laurent Guignard <lguignard.debian@gmail.com>  Thu, 29 Jan 2009 10:12:05 +0100

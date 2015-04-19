@@ -1,0 +1,36 @@
+This file describe the process in order to build manually dhcp-probe package
+
+Patches description
+-------------------
+Patches are located in debian/patches directory. These patches were created 
+with quilt tool.
+
+ There are two patches on man pages to fix "roff" syntax.
+
+ The third patch is about a C syntax problem that could cause
+ segfault on several architecture. This patch was submit by
+ Dann Frazier <dannf@debian.org> and will be integrated to the upstream source
+ code in next releases by Irwin Tillman <irwin@princeton.edu>.
+
+ The Fourth patch is to adapt sources to several architectures (32 or 64
+ bits). This patch was written by Laurent Guignard<lguignard.debian@gmail.com>
+ with Ilkka Virta <itvirta@iki.fi> help in C encoding. Thanks for this help.
+
+ Actually all patches were sent to the upstream programmer Irwin Tillman
+ <irwin@princeton.edu>.
+
+
+
+Patching method
+---------------
+ If you need to apply patches manually, there are only two patches (third and
+ fourth) required to compile dhcp-probe source code.
+
+ To manually apply patches, you could refer to man (1) quilt.
+ Main commands are :
+    - quilt applied
+      List applied patches
+    - quilt pop -a
+      Remove all applied patches
+    -quilt push -a
+      Apply all patches from a series file

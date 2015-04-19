@@ -1,0 +1,183 @@
+dhcp_probe NEWS - history of user-visible changes.
+
+
+See the file ChangeLog for the details of all changes.
+
+
+Version 1.3.0 - March 9 2009, by Irwin Tillman
+
+* The "received unexpected response ..." message passed to syslog()
+  now always ends with a period.  If you parse this message, you
+  may need to update your code.
+
+* New optional 'alert_program_name2' configuration file statement.
+  This works like the older 'alert_program_name', but calls an
+  alert program using a different syntax, intended to be extensible.
+  (The existing 'alert_program_name' called an alert program using
+  positional arguments, so was not extensible without breaking
+  existing alert programs.  That limited our ability to enhance 
+  dhcp_probe to pass additional information to the alert program.
+  The new 'alert_program_name2' calls an alert program using options.)
+  
+  The older optional 'alert_program_name' statement continues to be 
+  supported and unchanged.   If you are using that, you need not change.
+  However, you may wish to upgrade to the new alert_program_name2;
+  if you do so, you will need to replace or revise the alert
+  program so it supports the new call syntax.  See "New dhcp_probe_notify2 
+  program" item below.
+
+  You may not specify both an alert_program_name and an alert_program_name2
+  in the same configuration file.
+
+* New dhcp_probe_notify2 program.  
+
+  This program is like the older dhcp_probe_notify
+  program (which continues to be supported), but supports the new syntax
+  expected by the new 'alert_program_name2' configuration file statement.
+
+  If you are currently using the supplied dhcp_probe_notify alert
+  program, and you have not modified it (other than to update the
+  definitions at the top), you should be able to
+  switch to the new dhcp_probe_notify2 easily; you will need to
+  replace the alert_program_name statement in your configuration
+  file with the alert_program_name2 statement, specify
+  alert program dhcp_probe_notify2 instead of dhcp_probe_notify2,
+  and customized the definitions at the top of dhcp_probe_notify2
+  to match the definitions you customized in dhcp_probe_notify.
+
+  dhcp_probe_notify2 also accepts a new option so it can report a 
+  'yiaddr' value when the new "Lease Networks of Concern" feature is 
+   triggered.
+
+* New "Lease Networks of Concern" feature.  
+
+  This is intended to add more text to the messages logged (and via 
+  alerts) when a rogue DHCP server is distributing IP addresses that 
+  fall into network ranges of special concern -- for example, *your* 
+  networks' IP ranges. 
+
+  Most rogue DHCP servers distribute IP addresses associated with
+  a private network, or NAK legitimate clients.  Rogue DHCP servers
+  that distribute your own network's addresses may be of special
+  concern.
+
+  To activate this new feature, add 'lease_network_of_concern' statements 
+  to the configuration file to specify network ranges.  
+
+  When dhcp_probe detects a response from a rogue DHCP server, if the
+  response's yiaddr field is non-zero and falls within any of the
+  "Lease Networks of Concern", that fact will be reported.
+  Specifically, the "received unexpected response ..." message sent 
+  to syslog() will be extended to add additional text reporting 
+  the value of the yiaddr field.  And if you have specified an
+  'alert_program_name2' in the configuration file, that alert
+  program will be called with the new '-y yiaddr' option.
+  (If you are still using the older 'alert_program_name', the
+  alerts will not contain this additional information, as the 
+  old alert_program_name doesn't support this change.)
+
+* New "legal_server_ethersrc" test.
+
+  The program traditionally compares the IP source address of response packets
+  to the values specified by "legal_server" statements in the configuration
+  file.  Any response with an IP source address that doesn't appear as a
+  legal_server is treated as a rogue server.
+
+  The new legal_server_ethersrc configuration statement allows you to
+  also check the Ethernet source address of response packets.
+  If you do not specify any legal_server_ethersrc statements, the program
+  continues to behave as it has in the past.
+  If you specify one or more legal_server_ethersrc statements, the
+  program will check the Ethernet source address of response packets
+  to verify they appear among those listed.  Any response from an unlisted
+  Ethernet source address is treated as a rogue server.
+  This test is done in addition to the legal_server test.
+  So if you specify by legal_server and legal_server_ethersrc statements,
+  a response's IP source and Ethernet source addresses are both checked;
+  if either is missing from those you specified, the response is
+  treated as a rogue.
+
+  This new test is considered experimental in version 1.3.0,
+  as it has received only limited testing.
+
+
+Version 1.2.2 - October 15 2008, by Irwin Tillman
+
+* The default name of the pid file has changed from /etc/dhcp_probe.pid
+  to /var/run/dhcp_probe.pid.  You can still override the default by
+  specifying the '-p pidfile' command line option.
+
+* New -T option to enable the 'socket receive timeout' feature.
+  This may work around a problem on some platforms where the program
+  waits forever for responses after sending a probe packet.
+  This new feature does not work on all platforms.
+
+* When exiting, the program will more consistently log an "exiting" 
+  message.
+
+
+Version 1.2.1 - February 28 2008, by Irwin Tillman
+
+* No user-visible changes.
+
+
+Version 1.2.0 - March 14 2007, by Irwin Tillman
+
+* Upgraded autoconf and automake, may build on newer systems.
+
+* Allow you to add 802.1Q VLAN ID to outgoing frames.
+
+
+Version 1.1.0 - November 10 2004, by Irwin Tillman
+
+* Upgraded from the libnet 1.0.x API to the libnet 1.1.x API.
+  We no longer support the libnet 1.0.x API.  To compile this
+  version, you must first upgrade libnet to 1.1.2.1.
+
+  Additionally, you must modify libnet to add a
+  libnet_cq_end_loop() function, as described in our INSTALL document.
+
+
+Version 1.0.7 - November 2 2004, by Irwin Tillman
+
+* No user-visible changes.
+
+
+Version 1.0.6 - August 24 2004, by Irwin Tillman
+
+* Upgraded autoconf and automake, may build on newer systems.
+
+
+Version 1.0.5 - August 24 2004, by Irwin Tillman
+
+* We make some effort to ignore BootP/DHCP responses we happen to capture 
+  that aren't actually in response to our probe (we check htype, hlen, 
+  and chaddr fields).
+
+
+Version 1.0.4 - May 2002, by Irwin Tillman
+
+* We should be able to compile under gcc 3.0.x now.
+
+
+Version 1.0.3 - February 2001, by Irwin Tillman
+
+* No user-visible changes.
+
+
+Version 1.0.2 - January 2001, by Irwin Tillman
+
+* Cleanup of some of the configuration code.  You may now specify
+  where libnet and libpcap libraries and includes are located.
+
+
+Version 1.0.1 - August 2000, by Irwin Tillman
+
+* Added alert_program_name feature, so you may specify an external
+  program to run each time a response is received from an unexpected server.
+
+
+Version 1.0.0 - June 2000, by Irwin Tillman
+
+* first version
+

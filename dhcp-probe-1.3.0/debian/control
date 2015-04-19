@@ -1,0 +1,17 @@
+Source: dhcp-probe
+Section: net
+Priority: optional
+Maintainer: Laurent Guignard <lguignard.debian@gmail.com>
+Build-Depends: debhelper (>= 7), quilt, autotools-dev, libpcap-dev (>= 0.9), libnet1-dev (>= 1.1.2.1-3), dpkg-dev (>=1.15.4)
+Standards-Version: 3.9.2
+Homepage: http://www.net.princeton.edu/software/dhcp_probe/
+
+Package: dhcp-probe
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ucf, libpcap0.8 (>= 0.9), libnet1 (>= 1.1.2.1-3), net-tools
+Description: network DHCP or BootP server discover
+ dhcp_probe attempts to discover DHCP and BootP servers on a directly-attached
+ Ethernet network. A network administrator can use this tool to locate un-
+ authorized DHCP and BootP servers.
+ Essentially, dhcp_probe mimics a BootP or DHCP client in a variety of
+ possible states, attempting to provoke responses from servers.

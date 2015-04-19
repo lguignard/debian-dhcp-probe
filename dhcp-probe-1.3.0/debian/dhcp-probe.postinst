@@ -1,0 +1,97 @@
+#!/bin/sh
+# piston's script for dhcp-probe
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+
+PACKAGE="dhcp-probe"
+CONF_DIR="/etc/$PACKAGE"
+CONF_FILE="/etc/dhcp_probe.cf"
+
+MSG="dhcp-probe: IP not configured on host, please see template file"
+MSG="$MSG /usr/share/doc/dhcp-probe/dhcp_probe.tpl.eth0 to configure !"
+
+#
+# Dynamic configuration procedure
+#
+if test -f /lib/lsb/init-functions
+then
+	. /lib/lsb/init-functions
+fi
+
+#
+# postinst script main
+#
+case "$1" in
+    configure)
+			IFCONFIG='/sbin/ifconfig'
+			DEST="/etc/$PACKAGE/$PACKAGE"
+			NB_FILE=`ls -1 "$CONF_DIR" | wc -l`
+			if test "$NB_FILE"="0" 
+			then # Configuration doesn't exist
+				interfaces=`$IFCONFIG | grep Ethernet | awk '{ print $1 }';`
+				if test -n "$interfaces"
+				then
+					for i in $interfaces; do
+						ether=`$IFCONFIG | grep -e "^$i" | awk '{ print $5 }';`
+						eth_lines=`$IFCONFIG | grep -A 3 $i`
+						inet=`echo $eth_lines | awk '{ print $6 }';`
+						if test $inet = 'inet'
+						then
+							ipv4=`echo $eth_lines | awk '{ print $7 }' | awk -F: '{ print $2 }'`                                          
+			        ipv4_mask=`echo $eth_lines | awk '{ print $8 }' | awk -F: '{ print $2 }'`
+							TMPDEST=`mktemp -t $PACKAGE.XXXXXXXX`
+							echo "#" > "$TMPDEST.$i"
+							echo "# Automaticaly generated file during dhcp-probe package install procedure" >> "$TMPDEST.$i"
+							echo "#" >> "$TMPDEST.$i"
+							echo "INTERFACE=\"$i\"" >> "$TMPDEST.$i"
+							echo "MAC=\"$ether\"" >> "$TMPDEST.$i"
+							echo "IPV4=\"$ipv4\"" >> "$TMPDEST.$i"
+							echo "IPV4_MASK=\"$ipv4_mask\"" >> "$TMPDEST.$i"
+							ucf "$TMPDEST.$i" "$DEST.$i"
+							logger -i -p daemon.crit "$TMPDEST.$i installed."
+							rm -f $TMPDEST
+						else
+							echo "IP V4 isn't configured on interface $i !" | tee | logger -i -p daemon.crit
+						fi
+						ether=""
+						eth_lines=""
+					done
+				fi
+			fi
+			DHCP_PROBE_CF=`mktemp -t $PACKAGE.XXXXXXXX`
+			if test ! -f "$CONF_FILE"; then
+				ucf "$DHCP_PROBE_CF" "$CONF_FILE"
+			fi
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+
+
+#DEBHELPER#
+
+exit 0
+
+

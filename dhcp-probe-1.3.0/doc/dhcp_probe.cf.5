@@ -1,0 +1,765 @@
+.\" Copyright (c) 2000-2009, The Trustees of Princeton University.  All rights reserved.
+.\"
+.TH DHCP_PROBE.CF 5 "Mar 9 2009" "Princeton Univ."
+.SH NAME
+dhcp_probe.cf \- configuration file for dhcp_probe
+.SH SYNPOSIS
+/etc/dhcp_probe.cf
+.SH DESCRIPTION
+The file
+.B /etc/dhcp_probe.cf
+contains configuration information used by the
+.BR dhcp_probe (8)
+daemon.
+dhcp_probe
+reads the file when it begins (and whenever it
+receives a SIGHUP signal).
+.PP
+The location of this file defaults to
+.BR /etc/dhcp_probe.cf ,
+but may be overridden by a command-line option to
+.BR dhcp_probe (8).
+.PP
+The file consists of a series of statements, one per line.
+Each statement begins with a keyword followed by one or
+more arguments (depending on the keyword); keywords and
+arguments are separated by spaces or tabs.
+Statements may be specified in any order.
+.PP
+Some keywords take an 
+.I ethernet-address
+argument.
+Ethernet address values must be written in a form that
+.BR ether_aton (3)
+recognizes; e.g.
+1:2:3:4:5:6 or 00:A5:b2:0:BB:c.
+.PP
+Some keywords take an 
+.I ip-address
+as a value.
+IP address values must be written in a form
+that
+.BR inet_aton (3)
+recognizes; e.g.
+192.168.1.2. 
+.PP
+Blank lines are ignored.
+Lines for which the first non-blank character is a '#' are treated
+as comments.
+Trailing comments on statements are
+.I not
+supported.
+.PP
+Because all presently-defined keywords are optional, the file may
+be empty, however, it must exist.
+.SH KEYWORDS
+.PP
+The keywords are as follows:
+.SS \fBchaddr\fP
+.RS
+.PP
+The
+.B chaddr
+statement is optional, and is used to specify the value of the 
+.I chaddr 
+field in the request packets sent by the program.
+This value is also used to compute the DHCP Client Identifier option in some
+of the request packets sent by the program (by prepending x'01').
+.PP
+Specify:
+.IP
+chaddr
+.I ethernet-address 
+.PP
+If not specified, this value defaults to the Ethernet address corresponding
+to the interface you specified on the commandline.
+.PP
+You might want to use the
+.B chaddr
+statement
+if the interface is also a DHCP client, so that sending requests with the
+interface's own chaddr/DHCP Client Identifier will not interfere with that
+functionality.
+.PP
+If you specify a value, be sure to specify a unicast Ethernet address that does not
+belong to any valid client on your network.
+.PP
+Correctly-functioning BootP and DHCP servers that respond will send
+any responses to the 
+.I chaddr 
+address, or in some cases, to the Ethernet
+broadcast address. 
+Therefore, if you specify a value here (and it differs from your interface's
+Ethernet address), the program will have to place the interface into 
+promiscuous mode to be sure it hears unicast responses.
+.PP
+Note that the 
+.I chaddr 
+value does not affect the Ethernet source address of the
+Ethernet frames sent by the program.
+.PP
+If you specify this value, you may also wish to specify the same value in the
+.B ether_src
+statement.
+See the description of that statement for further discussion.
+.SS \fBether_src\fP
+.RS
+.PP
+The
+.B ether_src
+statement is optional, and is used to specify the value of the 
+.I ether_src 
+field
+in the Ethernet frames sent by the program.
+.PP
+Specify:
+.IP
+ether_src
+.I ethernet-address
+.PP
+If not specified, this value defaults to the Ethernet address corresponding
+to the interface you specified on the commandline.
+.PP
+If you specify a value, be sure to specify a unicast Ethernet address that does not
+belong to any valid client on your network.
+.PP
+Note that this value does not affect the 
+.I chaddr 
+field or the DHCP Client Identifier
+option field in request packets sent by the program.
+.PP
+If you specified a
+.I chaddr
+value, you may also wish to specify an equal
+.I ether_src
+value. 
+While not strictly necessary, doing so will cause any Layer 2 switches on the network
+to learn that this hardware address is on your leg of the network, so they
+will not need to flood response packets directed to that hardware address, but instead
+can direct the response packets only to your leg of the network.
+.PP
+Additionally, specifying the same
+.I ether_src value
+could help you discover any buggy BootP or DHCP servers
+that mistakenly direct their responses to the sender's ether_src (instead of to the sender's bootp_chaddr).
+.SS \fBserver_id\fP
+.RS
+.PP
+The 
+.B server_id
+statement is optional, and is used to specify the value of the
+DHCP Server Identifer option in some of the request packets sent by the program.
+.PP
+Specify:
+.IP
+server_id
+.I ip-address
+.PP
+If not specified, this value defaults to 10.254.254.254.
+.PP
+The DHCP Server Identifer option appears in the packets the program
+sends when it mimics a DHCP client in the SELECTING state.
+.PP
+It's best that the DHCP Server Identifier option the program uses
+not match the IP address of any valid DHCP server on your network,
+to avoid confusing them.
+Other than that, any IP address is a reasonable value; you may
+wish to specify one that could never be a valid address on your network.
+.SS \fBclient_ip_address\fP
+.RS
+.PP
+The
+.B client_ip_address
+statement is optional, and is used to specify the IP address that
+the program should request, or claim to have a lease on.
+.PP
+Specify:
+.IP
+client_ip_address
+.I ip-address
+.PP
+If not specified, this value defaults to 172.31.254.254.
+.PP
+When the program generates a DHCPREQUEST packet that mimics a DHCP client
+that is in the INIT-REBOOT or SELECTING state, the packet contains a 
+Requested IP Address option containing this value.
+When the program generates a DHCPREQUEST packet that mimics a DHCP client
+that is in the REBINDING state, the packet contains a 
+.I ciaddr 
+field
+containing this value.
+.PP
+It's best that the value the program uses not match the IP address of any
+valid DHCP client on your network, to avoid confusing valid DHCP servers.
+.PP
+It's extremely useful if the value the program uses
+.I not
+be valid (topologically speaking) for the physical network on which
+the program sends the packets.
+Sending a topologically inappropriate value may stimulate some
+DHCP servers to respond with a DHCPNAK, which helps the program
+flush out DHCP servers.
+.SS \fBresponse_wait_time\fP
+.RS
+.PP
+The
+.B response_wait_time
+statement is optional, and is used to specify how long the program
+should wait for responses after sending a single request packet.
+.PP
+Specify
+.IP 
+response_wait_time
+.I num_milliseconds
+.PP
+If not specified, this value defaults to 5000 milliseconds (5 seconds).
+.PP
+The value is specified in milliseconds, and must fit into an 'int' on your host.
+(Values larger than an 'int' may be silently misinterpreted.)
+Typical values are on the order of a few thousand milliseconds; i.e. several seconds.
+.SS \fBcycle_time\fP
+.RS
+.PP
+The 
+.B cycle_time
+statement is optional, and is used to specify how long the program
+should sleep between each probe cycle.
+.PP
+Specify
+.IP 
+cycle_time
+.I num_seconds
+.PP
+If not specified, this value defaults to 300 seconds.
+.PP
+The value is specified in seconds, and must into into an 'unsigned int' on your host.
+(Values larger than an 'unsigned int' may be silently misinterpreted.)
+Typical valus range from several hundred to several thousand seconds (i.e. several minutes to several hours).
+.PP
+During each probe cycle, the program sends one of the request packet flavors,
+captures any responses that arrive during the
+.IR response_wait_time ,
+then repeats this for each of the other request packet flavors.
+After doing this for each flavor of request packet, the probe cycle is complete, and
+the program sleeps for the 
+.IR cycle_time .
+.SS \fBlegal_server\fP
+.RS
+.PP
+The 
+.B legal_server
+statement is optional, and is used to specify the IP source address of 
+responses that come from a legal BootP or DHCP server on your network.
+The statement may be specified multiple times.
+.PP
+Specify
+.IP 
+legal_server
+.I ip-address
+.PP
+If not specified, the program assumes there are no legal BootP and DHCP servers on
+your network; all responses will be treated as coming from an unknown DHCP server.
+.PP
+When the program receives a response packet, it compares the packet's IP source
+address to all the addresses you have specified in
+.B legal_server
+statements.
+If the IP source address matches one of these values, the response is deemed to have
+come from a known DHCP server, and is ignored.
+If the IP source address does not match any of these values (or you do not specify
+any 
+.BR legal_server ),
+then the program logs a message that reports the packet's IP source address and Ethernet source
+address.
+Additionally, if the program was started with the 
+.B \-o
+commandline option, the packet is also written to a packet capture file.
+.PP
+If both 
+.B legal_server
+and
+.B legal_server_ethersrc
+statements appear, then a response
+must have both a valid IP source and a valid ethernet source to be considered to have
+come from a known DHCP server.
+.PP
+When relaying a response from a server to a client, some BootP Relay Agents
+may change the response's IP source address, replacing the server's IP address
+with that of the BootP Relay Agent.
+If BootP Relay Agents on your network do this, you will need to specify
+their IP addresses here instead.
+.SS \fBlegal_server_ethersrc\fP
+.RS
+.PP
+The
+.B legal_server_ethersrc
+statement is optional, and is used to specify the Ethernet source address of
+responses that come from a legal BootP or DHCP server on your network.
+The statement may be specified multiple times.
+.PP
+Specify
+.IP
+legal_server_ethersrc
+.I ethernet-address
+.PP
+If not specified, the program does not check the Ethernet source address of responses.
+.PP
+If you have specified at least one
+.B legal_server_ethersrc
+value, 
+when the program receives a response packet,
+the program compares the packet's Ethernet source
+address to all the addresses you have specified in
+.B legal_server_ethersrc
+statements.
+If the Ethernet source does not match one of these values, the response is deemed to have
+come from an unknown DHCP server; 
+the program logs a message that reports the packet's IP source address and Ethernet source
+address.
+Additionally, if the program was started with the
+.B \-o
+commandline option, the packet is also written to a packet capture file.
+.PP
+If both 
+.B legal_server 
+and 
+.B legal_server_ethersrc 
+statements appear, then a response
+must have both a valid IP source and a valid ethernet source to be considered to have
+come from a known DHCP server.
+.PP
+Each router on the path from the DHCP server to the DHCP client will overwrite
+the Ethernet source address field.  
+So if you specify any
+.B legal_server_ethersrc
+statements,
+also list the Ethernet source value(s) for the last hop router(s).
+A BootP Relay Agent on the path from the DHCP server to the DHCP client will overwrite
+the Ethernet field.  
+So also list the Ethernet source value(s) for the BootP Relay Agent.
+(The BootP Relay Agent is often co-resident in the last-hop IP router, so you may have already taken care
+of this when you listed the last-hop router(s).
+.PP
+The 
+.B legal_server_ethersrc
+statement is considered experimental in version 1.3.0,
+as it has received only limited testing.
+.SS \fBlease_network_of_concern\fP
+.RS
+.PP
+The
+.B lease_network_of_concern
+statement is optional, and may be specified multiple times.
+The statement is used to specify one or more network ranges
+that are of concern relative to the IP addresses distributed
+by a rogue BootP/DHCP server. 
+.PP
+Specify
+.IP
+lease_network_of_concern
+.I network-ip-address network-mask
+.PP
+Specifying one or more
+.B lease_network_of_concern
+statements activates the "Lease Networks of Concern" feature.
+.PP
+When the program receives a response packet that it determines
+to be from a rogue BootP/DHCP server, if the "Lease Networks of Concern" feature
+is active, the program will examine the packet further.
+If the packet's 
+.B yiaddr
+field is non-zero, the value in that field is tested to see if
+it falls within any of the "Leases Networks of Concern."
+If it does, then the message the program logs is extended to
+also report this fact, and to include the value of the
+.B yiaddr
+field.
+Furthermore, if an 
+.B alert_program_name2
+was specified, when that program is called, it is called with an additional 
+.B "\-y yiaddr"
+option.
+(This is not supported if an
+.B alert_program_name
+was specified, as the older 
+.B alert_program_name
+uses a syntax that cannot be extended.)
+.PP
+The "Lease Networks of Concern" feature does not change the way
+the program probes for or detects rogue BootP/DHCP servers.
+Upon detection of a rogue BootP/DHCP server, the feature only may cause
+additional information to be added to the message logged
+(and passed to 
+.BR alert_program_name2 ).
+.PP
+This feature may be used, for example, by specifying your networks' 
+legitimate address ranges as "Lease Networks of Concern".
+While most rogue BootP/DHCP servers distribute private IP addresses, or send DHCPNAKs
+to legitimate clients, other more damaging rogue BootP/DHCP servers may
+distribute IP addresses that fall within your legitimate network ranges.
+This will help differentiate those more damaging incidents from
+the more common ones.
+.SS \fBalert_program_name\fP
+.RS
+.PP
+The
+.B alert_program_name
+statement is optional, and may be used to specify the name of an external program
+that should be run every time a response packet is received from an unexpected server.
+.PP
+Note that using the newer 
+.B alert_program_name2
+statement is preferrable.
+.PP
+Specify
+.IP
+alert_program_name
+.I /absolute/path/name
+.PP
+Unexpected response packets are reported as a matter of course,
+and optionally written to a packet capture file.
+You may use an
+.B alert_program_name
+to provide additional handling of the event, for example, to alert an appropriate
+party via mail or paging.
+The 
+.B alert_program_name
+you specify is called with four arguments in the following order:
+the name of the calling program (e.g. 
+.BR dhcp_probe ),
+the name of the interface on which the unexpected response packet was received,
+the IP source address of the packet,
+and the Ethernet source address of the packet.
+.PP
+As the
+.B alert_program_name
+is called with the same privileges as 
+.B dhcp_probe 
+(i.e. root), you should exercise caution to ensure that the alert program is safe for 
+a privileged user to execute.
+.PP
+Because the syntax supported by the external program is not extensible,
+the use of 
+.B alert_program_name2
+is preferrable.
+.PP
+You may not specify both 
+.B alert_program_name
+and
+.BR alert_program_name2 .
+.SS \fBalert_program_name2\fP
+.RS
+.PP
+The
+.B alert_program_name2
+statement is optional, and may be used to specify the name of an external program
+that should be run every time a response packet is received from an unexpected server.
+.PP
+Specify
+.IP
+alert_program_name2
+.I /absolute/path/name
+.PP
+Unexpected response packets are reported as a matter of course,
+and optionally written to a packet capture file.
+You may use an
+.B alert_program_name2
+to provide additional handling of the event, for example, to alert an appropriate
+party via mail or paging.
+The
+.B alert_program_name2
+you specify is called with the following required options:
+.PP
+.RS
+.nf
+\-p the name of the calling program (e.g. dhcp_probe),
+\-I the name of the interface on which the unexpected response packet was received
+\-i the IP source address of the packet
+\-m Ethernet source address of the packet
+.fi
+.RE
+.PP
+The following non-required options may also be passed:
+.PP
+.RS
+.nf
+\-y the non-zero yiaddr value from the packet, when it falls inside a "Lease Network of Concern"
+.fi
+.RE
+.PP
+The 
+.B alert_program_name2 
+program you specify must ignore options or arguments it does not recognize;
+this is to ensure it remains forward-compatible with future enhancements to
+.BR dhcp_probe .
+It must be prepared to accept options in any order.
+.PP
+As the
+.B alert_program_name2
+is called with the same privileges as
+.B dhcp_probe
+(i.e. root), you should exercise caution to ensure that the alert program is safe for
+a privileged user to execute.
+.PP
+You may not specify both 
+.B alert_program_name
+and
+.BR alert_program_name2 .
+.RE
+.SH EXAMPLE
+An example 
+.B /etc/dhcp_probe.cf
+file follows:
+.PP
+.RS
+.nf
+# dhcp_probe.cf: config file for dhcp_probe
+#
+# General syntax:
+#  Comment lines start with '#' (trailing comments not permitted).
+#  Blank lines are OK.
+#  Tokens within a line should be separated with spaces and/or tabs.
+#  Entries in the file may be in any order.
+#  Any 'ethernet-address' must be written in a form that ether_aton(3) recognizes; e.g.
+#      1:2:3:4:5:6   00:A5:b2:0:BB:c
+#  Any 'ip-address' must be written in a form that inet_aton(3) recognizes; e.g.
+#      192.168.1.2
+#
+# ----------------------------------------------------------------------------------
+#
+# CLIENT HARDWARE ADDRESS
+#
+# By default, for the 'chaddr' field in the BootP header, we use the Ethernet
+# address corresponding to the interface you specified.
+# We also use this value to compute the DHCP Client Identifier option (by prepending x'01').  
+# You may optionally override this value.  
+# (Note that this does not override the Ethernet Src address in the Ethernet frame we send.)
+#
+# You might want to do this if our interface is also a DHCP client, so 
+# sending requests with the interface's own chaddr/DHCP Client Identifier would interfere with 
+# that functionality.
+#
+# If you specify a value, be sure to specify an Ethernet address that does not belong to
+# any valid client on your network.  Be sure to specify a unicast Ethernet address.
+#
+# Syntax:
+#    chaddr enet-addr
+
+chaddr 0:0:0:1:2:3
+
+
+# ----------------------------------------------------------------------------------
+#
+# ETHERNET SOURCE ADDRESS
+#
+# By default, for the 'ether_shost' field in the Ethernet header, we use the Ethernet
+# address corresponding to the interface you specified.
+# You may optionally override this value.
+# (Note that this does not override the 'chaddr' in the BootP header, nor the DHCP Client Identifier.)
+#
+# If you are specify the 'chaddr' statement, you might want to also do this, so you don't miss buggy 
+# DHCP servers that respond (incorrectly) to ether_src instead of to chaddr. 
+#
+# If you specify a value, be sure to specify an Ethernet address that does not belong to
+# any valid client on your network.  Be sure to specify a unicast Ethernet address.
+#
+# Syntax:
+#    ether_src enet-addr
+
+ether_src 0:0:0:1:2:3
+
+
+# ----------------------------------------------------------------------------------
+#
+# DHCP SERVER IDENTIFIER
+#
+# When we generate a DHCPREQUEST packet corresponding to a client that is in the SELECTING
+# state, the options field must contain a 'DHCP Server Identifier' option, indicating the
+# IP address of the DHCP server the client is selecting.   It's best that the value we use
+# not match the IP address of any valid DHCP server, to avoid confusing them.  The program
+# provides a default value of 10.254.254.254, which you may override here.
+#
+# Syntax:
+#    server_id ip-addr
+
+server_id 10.1.2.3
+
+# ----------------------------------------------------------------------------------
+#
+# CLIENT IP ADDRESS
+#
+# When we generate a DHCPREQUEST packet corresponding to a client that is in the INIT-REBOOT
+# or SELECTING state, the options field must containg a 'Requested IP Address' option, indicating
+# the IP address the client is requesting.    When we generate a DHCPREQUEST packet corresponding
+# to a client that is in the REBINDING state, the 'ciaddr' field in the BootP header must contain
+# the IP address that the DHCP client presently has leased and wishes to renew.
+#
+# In all these cases, it's best that the value we use not match the IP address of any valid DHCP client, 
+# to avoid confusing the valid DHCP servers.  
+#
+# Furthermore, it is extremely useful if the value we use *not* be valid (topologically speaking) for the 
+# physical network on which we send the packets.  Sending a topologically inappropriate value
+# may stimulate some DHCP servers to respond with a DHCPNAK, which helps us flush out DHCP servers.
+# (This will probably happen only in response to the packets we sending when pretending to be in REBINDING state.)
+#
+# The program provides a default value of 172.31.254.254, which you may override here.
+#
+# Syntax:
+#   client_ip_address ip-addr
+
+# client_ip_address 172.31.254.254
+
+# ----------------------------------------------------------------------------------
+#
+# RESPONSE WAIT TIME
+#
+# After sending one packet, we wait for responses.  The length of time we wait
+# is the 'response_wait_time'.  The program provides a default value of 5000, which you
+# may override here.  The value is measured in milliseconds, and must fit into
+# an 'int' on your host.  (Values larger than an 'int' may be silently misinterpreted.)
+# Typical values are on the order of a few thousand milliseconds; i.e. several seconds.
+#
+# Syntax:
+#    response_wait_time num_milliseconds
+
+# response_wait_time 5000
+
+# ----------------------------------------------------------------------------------
+# 
+# CYCLE WAIT TIME
+# 
+# For each flavor packet, we send the packet and listen for responses to that packet.
+# After doing this for all flavor packets, we go to sleep for the "cycle_time",
+# then repeat the process.  The program provides a default value of 300, which you
+# may override here.  The value is measured in seconds, and must fit into an
+# 'unsigned int' on your host.  (Values larger than an 'unsigned int' may be silently
+# misinterpreted.)  Typical valus range from several hundred to several thousand
+# seconds (i.e. several minutes to several hours).
+#
+# Syntax:
+#    cycle_time num_seconds
+
+cycle_time 1200
+
+# ----------------------------------------------------------------------------------
+#
+# LEGAL SERVERS' IP SOURCE ADDRESSES
+#
+# After sending one packet, we wait for responses.  Responses from legal BootP or DHCP
+# servers are ignored; presumably you aren't interesting in discovering them.
+# Specify a legal server's IP source address with the 'legal_server' statement.
+# The value you specify is compared to the IPsrc field in each response's IP header.
+#
+# If you have multiple legal servers, specify each in a separate statement.
+# If your BootP Relay Agents overwrite the server's IP address in the IPsrc field
+# with their own IP addresses, you will need to list the IP addresses of the
+# BootP Relay Agents.
+#
+# Alternatively, do not specify any legal_server statements at all, so *no* responses
+# will be considered legal.
+# (This is different from the way legal_server_ethersrc statements are handled.)
+#
+# If both legal_server and legal_server_ethersrc statements appear, then a response
+# must have both a valid IP source and a valid ethernet source to be considered legal.
+#
+# Syntax:
+#   legal_server ip-addr
+
+legal_server 192.168.1.2
+legal_server 192.168.3.4
+
+# ----------------------------------------------------------------------------------
+#
+# LEGAL SERVERS' ETHERNET SOURCE ADDRESSES
+#
+# Specify a legal server's Ethernet source address with the 'legal_server_ethersrc' statement.
+# The value you specify is compared to the ethernet_src field in each response's IP header.
+#
+# If you have multiple legal ethernet sources, specify each in a separate statement.
+# Each router on the path from the DHCP server to the DHCP client will overwrite
+# the ethernet_src field.  So also list the ethernet_src value(s) for the last hop router(s).
+# The BootP Relay Agent on the path from the DHCP server to the DHCP client will overwrite
+# the ethernet_src field.  So also list the ethernet_src value(s) for the BootP Relay Agent.
+# (This is often co-resident in the last-hop IP router, so you may have already taken care
+# of this when you listed the last-hop router(s).
+#
+# Alternatively, do not specify any legal_server_ethersrc statements at all.
+# If none are specified, then all ethernet_src values are considered legal.
+# (This is different from the way legal_server statements are handled.)
+#
+# If both legal_server and legal_server_ethersrc statements appear, then a response
+# must have both a valid IP source and a valid ethernet source to be considered legal.
+#
+# Syntax:
+#   legal_server_ethersrc enet-addr
+
+# legal_server_ethersrc 0:2:4:ab:cd:ef
+# legal_server_ethersrc 0:17:30:1:0A:3
+
+# ----------------------------------------------------------------------------------
+#
+# ALERT PROGRAM NAME
+#
+# In addition to logging a response received from an unexpected server, we will optionally
+# call a user-specified 'alert program' if one is specified here.  To use this feature,
+# specify the absolute pathname of a program we should execute for each unexpected response.
+# Either specify it using the older 'alert_program_name' statement, or (preferrably) using
+# the newer 'alert_program_name2' statement.  (The newer statement is preferrable because
+# it calls the alert program with a more extensible syntax.)  You may not specify
+# both alert_program_name and alert_program_name2.
+#
+# Old style alert program:
+#
+# Syntax:
+#   alert_program_name /absolute/path/name
+#
+# The program specified via 'alert_program_name' will be called as follows:
+#   /absolute/path/name  name_of_calling_program  name_of_interface_on_which_the_response_was_received  IP_source_of_the_response  ether_src_of_the_response
+#
+#
+# Newer style alert program:
+#
+# Syntax:
+#   alert_program_name2 /absolute/path/name
+#
+# The program specified via 'alert_program_name2' will be called as follows:
+#   /absolute/path/name  \-p name_of_calling_program  \-I name_of_interface_on_which_the_response_was_received  \-i IP_source_of_the_response  \-m ether_src_of_the_response [\-y yiaddr_when_in_lease_networks_of_concern]
+# The options may appear in any order.
+# The program must silently ignore any options or arguments it does not recognize,
+# so as to be forward-compatible with future enhancements to dhcp_probe.
+
+
+alert_program_name2 /usr/local/etc/dhcp_probe_notify2
+
+
+# ----------------------------------------------------------------------------------
+#
+# LEASE NETWORKS OF CONCERN
+#
+# Optionally define one or more network ranges that are to be treated as
+# being of special concern when a rogue BootP/DHCP server is detected sending response
+# that contains a 'yiaddr' value that falls into any of these ranges.
+# Specify each such network ranges of concern in a separate statement.
+# When the yiaddr value in a rogue server's response falls into any of these ranges,
+# the message logged will contain additional text remarking on this fact.  
+# And if an alert_program_name2 is used, that alert program
+# will be called with an extra option so it can also act on that fact.
+#
+# If you specify all your networks' legitimate IP ranges, this can help you
+# take additional notice of rogue BootP/DHCP servers that distribute *your*
+# network addresess, rather than simply distribute private IP address or
+# send DHCPNAKs to legitimate clients.
+#
+# Syntax:
+#    lease_network_of_concern  IP-network-address network-mask
+
+
+lease_network_of_concern 128.112.0.0 255.255.0.0
+lease_network_of_concern 140.180.0.0 255.255.0.0
+
+
+
+.fi
+.RE
+.SH SEE ALSO
+.BR dhcp_probe (8)

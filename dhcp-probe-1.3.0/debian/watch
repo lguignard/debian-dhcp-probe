@@ -1,0 +1,3 @@
+version=3
+opts=filenamemangle=s/dhcp_probe/dhcp-probe/ \
+ http://www.net.princeton.edu/software/dhcp_probe/dhcp_probe-(.*).tar.gz

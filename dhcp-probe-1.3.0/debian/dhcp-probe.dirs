@@ -1,0 +1,4 @@
+usr/sbin
+etc/init.d
+etc/dhcp-probe
+usr/share/doc/dhcp-probe/examples 
