@@ -15,7 +15,10 @@ DEB_HOST_ARCH_BITS := $(shell dpkg-architecture -qDEB_HOST_ARCH_BITS 2>/dev/null
 # Information about package
 PACKAGE_NAME = dhcp-probe
 
-CFLAGS = -Wall -g
+DEB_BUILD_MAINT_OPTIONS=hardening=+all
+DEB_BUILD_HARDENING=1
+DPKG_EXPORT_BUILDFLAGS = 1
+include /usr/share/dpkg/buildflags.mk
 
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
@@ -31,7 +34,7 @@ config.status: configure
 	dh_testdir configure
 	dh_auto_configure -- --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr  \
 		--mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info \
-		CFLAGS="$(CFLAGS)" LDFLAGS="-Wl,-z,defs"
+		CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 build: build-stamp
 
