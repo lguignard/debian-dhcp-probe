@@ -1,12 +1,12 @@
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:		dhcp-probe
-# Required-Start:    $local_fs $remote_fs $syslog $network $all
-# Required-Stop:     $local_fs $remote_fs $syslog $network 
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: dhcp-probe daemon to survey DHCP/BootP server on LAN
-# Description: Enable or disable dhcp-probe service
+# Required-Start:    	$local_fs $remote_fs $syslog $time $named $network
+# Required-Stop:     	$local_fs $remote_fs $syslog $time $named $network 
+# Default-Start:     	2 3 4 5
+# Default-Stop:      	0 1 6
+# Short-Description: 	dhcp-probe daemon to survey DHCP/BootP server on LAN
+# Description: 		Enable or disable dhcp-probe service
 ### END INIT INFO
 
 set -e

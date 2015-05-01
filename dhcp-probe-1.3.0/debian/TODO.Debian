@@ -1,3 +1,11 @@
 * Clean the dhcp-probe.init.d file from used code
 
-* 
+* Fix lintian problem with dpkg-source
+	Error message :
+	---------------
+	lintian -Ii ~/buildpkg/dhcp-probe_1.3.0/dhcp-probe_1.3.0-11_i386.changes 
+	dpkg-source: error: LC_ALL=C patch -t -F 0 -N -p1 -u -V never -g0 -E -b -B .pc/01_dhcp_probe.5.diff/ --reject-file=- < /tmp/temp-lintian-lab-UIGepgaZ8T/pool/d/dhcp-probe/dhcp-probe_1.3.0-11_source/unpacked/debian/patches/01_dhcp_probe.5.diff gave error exit status 1
+	internal error: dpkg-source -x failed with status  2 at /usr/share/lintian/collection/unpacked line 69.
+	warning: collect info unpacked about package dhcp-probe failed
+	warning: skipping check of source package dhcp-probe
+
