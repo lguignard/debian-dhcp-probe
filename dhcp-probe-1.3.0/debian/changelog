@@ -1,4 +1,4 @@
-dhcp-probe (1.3.0-11) UNRELEASED; urgency=low
+dhcp-probe (1.3.0-11) unstable; urgency=low
 
   * Upgrade to 3.9.6 Debian policy,
   * Fix startup depencies to suite LSB3.1,
