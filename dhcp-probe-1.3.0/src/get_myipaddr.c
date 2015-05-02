@@ -118,21 +118,7 @@ get_myipaddr(int sockfd, char *ifname, struct in_addr *my_ipaddr)
 #endif /* not STRUCT_SOCKADDR_HAS_SA_LEN */
 
 		/* increment ptr to next interface for next time through the loop */
-#ifdef __ARCH__	/* Debian GNU/Linux behavior for packaging goal */
-		switch(__ARCH__) {
-			case 32:	/* 32 bits architectures */
-				ptr += sizeof(ifr->ifr_name) + len;
-				break;
-			case 64:	/* 64 bits architectures */
-				ptr += sizeof(struct ifreq);
-				break;
-			default:	/* Default dhcp_probe behavior */
-				ptr += sizeof(ifr->ifr_name) + len;
-				break;
-		}
-#else	/* Default dhcp_probe behavior */
 		ptr += sizeof(ifr->ifr_name) + len;
-#endif
 
 		if (strcmp(ifname, ifr->ifr_name) != 0 )  /* is this the interface we're looking for? */
 			continue;

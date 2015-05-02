@@ -472,10 +472,10 @@ you specify is called with the following required options:
 .PP
 .RS
 .nf
-\-p the name of the calling program (e.g. dhcp_probe),
-\-I the name of the interface on which the unexpected response packet was received
-\-i the IP source address of the packet
-\-m Ethernet source address of the packet
+-p the name of the calling program (e.g. dhcp_probe),
+-I the name of the interface on which the unexpected response packet was received
+-i the IP source address of the packet
+-m Ethernet source address of the packet
 .fi
 .RE
 .PP
@@ -483,7 +483,7 @@ The following non-required options may also be passed:
 .PP
 .RS
 .nf
-\-y the non-zero yiaddr value from the packet, when it falls inside a "Lease Network of Concern"
+-y the non-zero yiaddr value from the packet, when it falls inside a "Lease Network of Concern"
 .fi
 .RE
 .PP
@@ -723,7 +723,7 @@ legal_server 192.168.3.4
 #   alert_program_name2 /absolute/path/name
 #
 # The program specified via 'alert_program_name2' will be called as follows:
-#   /absolute/path/name  \-p name_of_calling_program  \-I name_of_interface_on_which_the_response_was_received  \-i IP_source_of_the_response  \-m ether_src_of_the_response [\-y yiaddr_when_in_lease_networks_of_concern]
+#   /absolute/path/name  -p name_of_calling_program  -I name_of_interface_on_which_the_response_was_received  -i IP_source_of_the_response  -m ether_src_of_the_response [-y yiaddr_when_in_lease_networks_of_concern]
 # The options may appear in any order.
 # The program must silently ignore any options or arguments it does not recognize,
 # so as to be forward-compatible with future enhancements to dhcp_probe.
