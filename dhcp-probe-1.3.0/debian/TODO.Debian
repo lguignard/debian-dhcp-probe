@@ -1,4 +1,6 @@
-* Clean the dhcp-probe.init.d file from used code
+* Check the output of dhcp_probe command (dhcp_probe -f eth0 - /dev/stdout
+	it seems to be grabled (bug #661136)
+
 
 * Fix lintian problem with dpkg-source
 	Error message :
