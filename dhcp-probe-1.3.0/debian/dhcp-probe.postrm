@@ -44,6 +44,10 @@ case "$1" in
 				fi
 				ucf --purge "$UPSTRCONF"
 				rm -f "$UPSTRCONF"
+
+				for file in `ucfq $PACKAGE`; do
+					ucf --purge "${file/:*/}"
+				done
 			fi
       echo "dhcp-probe purge done !"
 		;;
