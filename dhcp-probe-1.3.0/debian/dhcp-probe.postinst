@@ -63,6 +63,7 @@ case "$1" in
 							echo "IPV4=\"$ipv4\"" >> "$TMPDEST.$i"
 							echo "IPV4_MASK=\"$ipv4_mask\"" >> "$TMPDEST.$i"
 							ucf "$TMPDEST.$i" "$DEST.$i"
+							ucfr "$PACKAGE" "$DEST.$i"
 							logger -i -p daemon.crit "$TMPDEST.$i installed."
 							rm -f $TMPDEST
 						else
@@ -76,6 +77,7 @@ case "$1" in
 			DHCP_PROBE_CF=`mktemp -t $PACKAGE.XXXXXXXX`
 			if test ! -f "$CONF_FILE"; then
 				ucf "$DHCP_PROBE_CF" "$CONF_FILE"
+        ucfr "$PACKAGE" "$CONF_FILE"
 			fi
     ;;
 
