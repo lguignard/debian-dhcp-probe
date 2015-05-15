@@ -24,6 +24,40 @@ UPSTRCONF="/etc/dhcp_probe.cf"
 
 UCF_CONF="/etc/ucf.conf"
 UCF_BIN=`which ucf || true`
+CONF_DIR="/etc/$PACKAGE"
+
+
+update_ucf_consistency () {
+
+	IFCONFIG='/sbin/ifconfig'
+	DEST="/etc/$PACKAGE/$PACKAGE"
+	if test -d "$CONF_DIR"; then
+		NB_FILE=`ls -1 "$CONF_DIR" | wc -l`
+		if test "$NB_FILE"="0"; then # Configuration doesn't exist
+			interfaces=`$IFCONFIG | grep Ethernet | awk '{ print $1 }';`
+			if test -n "$interfaces"; then
+				for i in $interfaces; do
+					if ! test -f "$DEST.$i"; then
+						for ucfline in `ucfq -w '$DEST.$i'`; do
+							if test -n $ucfline; then
+								# file does not exist and if registered in ucf refrences
+								echo "ucfr --purge \"$ucfline\""
+							fi
+						done
+					fi
+				done
+			fi
+		fi
+	else
+		for ucfline in `ucfq -w '$DEST.$i'`; do
+			if test -n $ucfline; then
+				# file does not exist and if registered in ucf refrences
+				echo "ucfr --purge \"$ucfline\""
+			fi
+		done
+	fi
+
+}
 
 
 case "$1" in
